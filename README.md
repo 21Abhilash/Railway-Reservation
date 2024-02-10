@@ -11,4 +11,4 @@ This is a simple Java program for managing railway reservations. It allows users
 1. Clone the repository to your local machine:
 
 ```bash
-git clone https://github.com/your-username/railway-reservation.git](https://github.com/21Abhilash/Railway-Reservation.git)
+git clone https://github.com/your-username/railway-reservation.git](https://github.com/21Abhilash/Railway-Reservation.git
