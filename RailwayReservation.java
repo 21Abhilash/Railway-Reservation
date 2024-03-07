@@ -1,21 +1,30 @@
+import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
 public class RailwayReservation {
+    private Connection connection;
     private TrainSchedule trainSchedule;
     private Map<String, Integer> seatAvailability;
 
     public RailwayReservation() {
         trainSchedule = new TrainSchedule();
         seatAvailability = new HashMap<>();
+        
         initializeSeatAvailability();
     }
 
     private void initializeSeatAvailability() {
-        // Initialize seat availability for each train
-        for (String train : trainSchedule.getTrainNames()) {
-            seatAvailability.put(train, trainSchedule.getSeatsAvailable(train));
+        try {
+            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/RailwayReservationDB", "root", "ani@HOME83");
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT trainNumber, seatsAvailable FROM TrainSchedule");
+            while (resultSet.next()) {
+                seatAvailability.put(resultSet.getString("trainNumber"), resultSet.getInt("seatsAvailable"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
@@ -44,8 +53,16 @@ public class RailwayReservation {
         if (trainSchedule.isValidTrain(trainName)) {
             int availableSeats = seatAvailability.get(trainName);
             if (numSeats <= availableSeats) {
-                seatAvailability.put(trainName, availableSeats - numSeats);
-                generateBookingConfirmation(trainName, numSeats);
+                try {
+                    PreparedStatement preparedStatement = connection.prepareStatement("UPDATE TrainSchedule SET seatsAvailable = ? WHERE trainNumber = ?");
+                    preparedStatement.setInt(1, availableSeats - numSeats);
+                    preparedStatement.setString(2, trainName);
+                    preparedStatement.executeUpdate();
+                    connection.commit();
+                    generateBookingConfirmation(trainName, numSeats);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
             } else {
                 System.out.println("Not enough seats available on " + trainName);
             }
@@ -92,6 +109,7 @@ class TrainSchedule {
         trainSchedule = new HashMap<>();
         initializeTrainSchedule();
     }
+
 
     private void initializeTrainSchedule() {
         // Sample train schedule
